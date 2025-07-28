@@ -6,3 +6,5 @@ langchain_openai
 langchain 
 langchain-community
 streamlit
+langsmith 
+python-dotenv

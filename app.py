@@ -1,6 +1,19 @@
 import streamlit as st
 from langchain_community.llms import Ollama
 from langchain.prompts import PromptTemplate
+from dotenv import load_dotenv
+import os
+from langchain.callbacks import tracing_v2_enabled    # Ensure LangSmith tracing is enabled
+
+# Load environment variables from .env
+load_dotenv()
+
+# Make sure LangSmith environment variables are loaded
+# Or set them manually as fallback
+os.environ["LANGCHAIN_TRACING_V2"] = "true"
+os.environ["LANGCHAIN_API_KEY"] = os.getenv("LANGCHAIN_API_KEY", "lsv2_pt_...")
+os.environ["LANGCHAIN_PROJECT"] = os.getenv("LANGCHAIN_PROJECT", "Blogapp")
+os.environ["LANGCHAIN_ENDPOINT"] = os.getenv("LANGCHAIN_ENDPOINT", "https://api.smith.langchain.com")
 
 # Setup Ollama model
 llm = Ollama(model="llama3.2:1b")
@@ -9,6 +22,7 @@ llm = Ollama(model="llama3.2:1b")
 prompt_template = PromptTemplate.from_template("Write a blog post for {topic}")
 chain = prompt_template | llm
 
+# Streamlit UI
 st.set_page_config(page_title="Local Blog Generator", layout="centered")
 st.title("📝 Blog Post Generator using Ollama (llama3.2:1b)")
 
@@ -19,6 +33,8 @@ if st.button("Generate Blog Post"):
         st.warning("Please enter a topic.")
     else:
         with st.spinner("Generating..."):
-            result = chain.invoke({"topic": topic})
+            # LangSmith tracing enabled here
+            with tracing_v2_enabled():
+                result = chain.invoke({"topic": topic})
             st.subheader("📰 Blog Post:")
             st.write(result)
